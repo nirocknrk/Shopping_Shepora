@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 fun DefaultPreview() {
     AssignmentSheporaTheme {
         Scaffold(
-            topBar = { HomeAppBar(title = "Shepora Mobile") { } },
+            topBar = { HomeAppBar(title = "Shepora Mobile") },
             content = {
                 ProductListing(sampleData) {}
             }
@@ -81,7 +81,7 @@ fun ProductListing(productsList: List<ProductModel>, onProductSelect: (ProductMo
 }
 
 @Composable
-fun HomeAppBar(title: String, openSearch: () -> Unit) {
+fun HomeAppBar(title: String) {
     TopAppBar(
         title = {
             Text(
@@ -90,12 +90,7 @@ fun HomeAppBar(title: String, openSearch: () -> Unit) {
                 overflow = TextOverflow.Ellipsis,
             )
         },
-        actions = {
-            IconButton(onClick = openSearch) {
-                Icon(imageVector = Icons.Filled.Search,
-                    contentDescription = "Search")
-            }
-        }
+        elevation = 12.dp
     )
 }
 
