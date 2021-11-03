@@ -1,14 +1,20 @@
 package com.nrk.sephora.assignmentshepora.view.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.material.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.nrk.sephora.assignmentshepora.R
 import com.nrk.sephora.assignmentshepora.models.ProductModel
 import com.nrk.sephora.assignmentshepora.view.HomeAppBar
 import com.nrk.sephora.assignmentshepora.view.LoadingItem
@@ -20,52 +26,112 @@ import com.nrk.sephora.assignmentshepora.view.ui.navigation.Destinations.Product
 fun MainPage(
     navHostController: NavHostController,
     viewModel: ProductListingViewModel = hiltViewModel()
-){
+) {
+    val scaffoldState = rememberScaffoldState()
     Scaffold(
-        topBar = { HomeAppBar(title = "Shepora Mobile") { } },
+        topBar = { HomeAppBar(title = stringResource(id = R.string.app_title)) },
         content = {
-            ProductListingFromLiveData(viewModel){ product ->
+            ProductListingFromLiveData(viewModel, scaffoldState) { product ->
                 viewModel.lastSelectedProduct(product)
                 navHostController.navigate(ProductDetailPage.withArgs(product.id))
             }
-        }
+        },
+        scaffoldState = scaffoldState,
+        snackbarHost = { scaffoldState.snackbarHostState }
     )
 }
 
 @ExperimentalFoundationApi
 @Composable
-fun ProductListingFromLiveData(viewModel: ProductListingViewModel,onProductSelect:(ProductModel)->Unit ){
+fun ProductListingFromLiveData(
+    viewModel: ProductListingViewModel,
+    scaffoldState: ScaffoldState,
+    onProductSelect: (ProductModel) -> Unit
+) {
 
     val lazyProductItems = viewModel.productDataSource.collectAsLazyPagingItems()
+    val (snackBarMessageRes, setSnackBarMessage) = rememberSaveable { mutableStateOf<Int?>(null) }
 
     lazyProductItems.let { productItems ->
         LazyVerticalGrid(cells = GridCells.Fixed(2), content = {
             items(productItems.itemCount) { index ->
                 productItems[index]?.let {
-                    ProductItem(product= it,  onProductSelect= onProductSelect)
+                    ProductItem(product = it, onProductSelect = onProductSelect)
                 }
             }
 
             productItems.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
+                        viewModel.isNewDataBeingDataLoaded = true
+                        setSnackBarMessage(null)
                         item { LoadingItem() }
                         item { LoadingItem() }
                     }
-                    loadState.append is LoadState.Loading -> {
+                    loadState.append is LoadState.Loading || loadState.prepend is LoadState.Loading -> {
+                        viewModel.isNewDataBeingDataLoaded = true
+                        setSnackBarMessage(null)
                         item { LoadingItem() }
                         item { LoadingItem() }
                     }
                     loadState.refresh is LoadState.Error -> {
-                        viewModel.handlePaginationDataError()
-                    }
-                    loadState.append is LoadState.Error -> {
+                        if (viewModel.isNewDataBeingDataLoaded) {
+                            viewModel.isNewDataBeingDataLoaded = false
+                            setSnackBarMessage(R.string.network_error_on_start)
+                        }
 
-                        viewModel.handlePaginationAppendError(
-                            "Fail to fetch more products. Please try again later.", "Ok")
+                    }
+                    loadState.append is LoadState.Error || loadState.prepend is LoadState.Error -> {
+                        if (viewModel.isNewDataBeingDataLoaded) {
+                            viewModel.isNewDataBeingDataLoaded = false
+                            setSnackBarMessage(R.string.network_error_on_load_more)
+                        }
                     }
                 }
             }
         })
     }
+
+    DefaultSnackBar(snackBarMessageRes = snackBarMessageRes, scaffoldState = scaffoldState) {
+        setSnackBarMessage(null)
+    }
+
+
+}
+
+@Composable
+fun DefaultSnackBar(
+    snackBarMessageRes: Int?,
+    scaffoldState: ScaffoldState,
+    actionLabel: String = stringResource(id = R.string.snackbar_action_ok),
+    actionPerformed: () -> Unit
+) {
+    SnackbarHost(
+        hostState = scaffoldState.snackbarHostState,
+        snackbar = { snackBarData ->
+            Snackbar(snackbarData = snackBarData, Modifier.padding(16.dp))
+        })
+
+    if (snackBarMessageRes != null) {
+        val messageString = stringResource(id = snackBarMessageRes)
+        LaunchedEffect(key1 = 1) {
+            val snackBarResult = scaffoldState.snackbarHostState.showSnackbar(
+                message = messageString,
+                actionLabel = actionLabel,
+                duration = SnackbarDuration.Indefinite
+            )
+            when (snackBarResult) {
+                SnackbarResult.Dismissed -> {
+                }
+                SnackbarResult.ActionPerformed -> {
+                    actionPerformed.invoke()
+                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                }
+            }
+        }
+
+    } else {
+        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+    }
+
 }

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Assignment Shepora</string>
+    <string name="app_title">Shepora Mobile</string>
+    <string name="network_error_on_start">Fail to fetch products details. Check you connection.</string>
+    <string name="network_error_on_load_more">Fail to fetch more products. Check you connection.</string>
+    <string name="snackbar_action_ok">OK</string>
 </resources>
