@@ -1,28 +1,33 @@
 package com.nrk.sephora.assignmentshepora.source.remote
 
-import android.util.Log
 import com.nrk.sephora.assignmentshepora.models.ProductModel
 import retrofit2.HttpException
-import javax.inject.Inject
+import java.io.IOException
 
 interface RemoteDataSource {
-    suspend fun getAllProductList() : List<ProductModel>
+    suspend fun getAllProductList(nextPage:Int) : ApiReponse<List<ProductModel>>
 
     suspend fun getProductDetails(productId: String) : ProductModel
 }
 
 class DefaultRemoteDataSourceImpl(private val apiService: ProductListingRemoteService) :RemoteDataSource{
-    override suspend fun getAllProductList():List<ProductModel> {
-        try{
-            val listOfProducts =  apiService.allProductListing().data
-            Log.i("Prod","API returned ${listOfProducts.size}")
-            return listOfProducts
+    override suspend fun getAllProductList(nextPage:Int):ApiReponse<List<ProductModel>> {
+        return try{
+            val listOfProducts =  apiService.allProductListing(
+                pageNumber = nextPage,
+                pageSize = 30,
+                include = "featured_variant,featured_ad",
+                sort = "sales"
+            ).data
+            return ApiReponse(listOfProducts,null)
         } catch (e: HttpException){
-            Log.e("Prod","API returned http error",e)
+            ApiReponse(null,ErrorRecord.ServerError)
+        }catch (e: IOException){
+            ApiReponse(null,ErrorRecord.NetworkError)
         }catch (e: Exception){
-            Log.e("Prod","API returned  error",e)
+            ApiReponse(null,ErrorRecord.GenericError)
         }
-        return emptyList()
+
     }
 
     override suspend fun getProductDetails(productId: String):ProductModel {

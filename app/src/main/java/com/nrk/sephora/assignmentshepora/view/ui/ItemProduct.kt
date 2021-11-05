@@ -1,6 +1,5 @@
 package com.nrk.sephora.assignmentshepora.view.ui
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -25,12 +24,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import coil.compose.rememberImagePainter
 import com.nrk.sephora.assignmentshepora.R
-import com.nrk.sephora.assignmentshepora.models.Attributes
+import com.nrk.sephora.assignmentshepora.models.DummyDataHelper
 import com.nrk.sephora.assignmentshepora.models.ProductModel
 import com.nrk.sephora.assignmentshepora.ui.theme.AssignmentSheporaTheme
 
-
-val dummyItem = ProductModel(Attributes("item3\ndads","this is item33\n" +"dads3\n" + "dads"),"id","type")
+val dummyItem = DummyDataHelper.createDummyProduct("item3\ndads","this is item33\n" +"dads3\n" + "dads")
 @ExperimentalFoundationApi
 @Preview(showBackground = true)
 @Composable
@@ -56,7 +54,7 @@ fun ProductItem(product: ProductModel,onProductSelect: (ProductModel)->Unit) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxWidth()
+                .fillMaxHeight()
                 .clickable(enabled = true, onClick = { onProductSelect(product) })
         ) {
             val (image, title, description,descriptionColumn) = createRefs()
