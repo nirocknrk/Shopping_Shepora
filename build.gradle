@@ -3,7 +3,7 @@ buildscript {
     ext {
         compose_version = '1.0.4'
         gsonVersion = '2.8.6'
-        okHttpVersion = '4.9.0'
+        okHttpVersion = '4.9.1'
         retrofitVersion = '2.9.0' 
     }
     repositories {
