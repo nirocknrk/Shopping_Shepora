@@ -55,5 +55,109 @@ class ProductListingViewModelTest {
     }
 
 
+    @Test
+    @Suppress("IllegalIdentifier")
+    fun `initial Loading success`() {
+        runBlocking {
 
+            val expectedResult = PagingSource.LoadResult.Page(dummyProductData(), -1, 1)
+
+            fakeRemoteDataSource.setProductsToReturn(dummyProductData())
+            fakeUseCase.setFailLoadingPage(-1)
+
+            val actualResult = fakeUseCase.getProductDataSource().load(
+                PagingSource.LoadParams.Refresh(
+                    key = 0,
+                    loadSize = 1,
+                    placeholdersEnabled = false
+                )
+            )
+
+            assertEquals(expectedResult, actualResult)
+        }
+
+    }
+
+    @Test
+    @Suppress("IllegalIdentifier")
+    fun `test subsequent Loading success`() {
+        runBlocking {
+
+            val expectedResult = PagingSource.LoadResult.Page(
+                data = dummyProductData(),
+                prevKey = null,
+                nextKey = 2
+            )
+
+            fakeRemoteDataSource.setProductsToReturn(dummyProductData())
+            fakeUseCase.setFailLoadingPage(-1)
+
+            val actualResult = fakeUseCase.getProductDataSource().load(
+                PagingSource.LoadParams.Append(
+                    key = 1,
+                    loadSize = 6,
+                    placeholdersEnabled = false
+                )
+            )
+
+            assertEquals(expectedResult, actualResult)
+        }
+
+    }
+
+
+    @Test
+    @Suppress("IllegalIdentifier")
+    fun `initial Loading On No Network`() {
+        runBlocking {
+            val error = Exception(ErrorRecord.NetworkError.toString(), Throwable())
+
+            val expectedResult = PagingSource.LoadResult.Error<Int, ProductModel>(error)
+
+            fakeRemoteDataSource.setProductsToReturn(dummyProductData())
+            fakeUseCase.setFailLoadingPage(0, ErrorRecord.NetworkError)
+
+            val actualResult = fakeUseCase.getProductDataSource().load(
+                PagingSource.LoadParams.Refresh(
+                    key = 0,
+                    loadSize = 1,
+                    placeholdersEnabled = false
+                )
+            )
+
+            assertEquals(expectedResult.toString(), actualResult.toString())
+        }
+
+    }
+
+    @Test
+    @Suppress("IllegalIdentifier")
+    fun `test subsequent Loading On No Network`() {
+        runBlocking {
+            val error = Exception(ErrorRecord.NetworkError.toString(), Throwable())
+            val expectedResult = PagingSource.LoadResult.Error<Int, ProductModel>(error)
+
+            fakeRemoteDataSource.setProductsToReturn(dummyProductData())
+            fakeUseCase.setFailLoadingPage(1)
+
+            val actualResult = fakeUseCase.getProductDataSource().load(
+                PagingSource.LoadParams.Append(
+                    key = 1,
+                    loadSize = 9,
+                    placeholdersEnabled = false
+                )
+            )
+
+            assertEquals(expectedResult.toString(), actualResult.toString())
+        }
+
+    }
+
+    private fun dummyProductData(): List<ProductModel> {
+        return listOf(
+            DummyDataHelper.createDummyProduct("item1", "this is item1"),
+            DummyDataHelper.createDummyProduct("item2", "this is item2"),
+            DummyDataHelper.createDummyProduct("item3", "this is item3")
+        )
+    }
 }
