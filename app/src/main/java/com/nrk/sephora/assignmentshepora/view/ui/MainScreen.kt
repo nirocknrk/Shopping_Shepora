@@ -1,14 +1,18 @@
 package com.nrk.sephora.assignmentshepora.view.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -16,8 +20,6 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.nrk.sephora.assignmentshepora.R
 import com.nrk.sephora.assignmentshepora.models.ProductModel
-import com.nrk.sephora.assignmentshepora.view.HomeAppBar
-import com.nrk.sephora.assignmentshepora.view.LoadingItem
 import com.nrk.sephora.assignmentshepora.view.ProductListingViewModel
 import com.nrk.sephora.assignmentshepora.view.ui.navigation.Destinations.ProductDetailPage
 
@@ -29,10 +31,21 @@ fun MainPage(
 ) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
-        topBar = { HomeAppBar(title = stringResource(id = R.string.app_title)) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.app_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                elevation = 12.dp
+            )
+        },
         content = {
             ProductListingFromLiveData(viewModel, scaffoldState) { product ->
-                viewModel.lastSelectedProduct(product)
+                viewModel.onProductSelect(product)
                 navHostController.navigate(ProductDetailPage.withArgs(product.id))
             }
         },
@@ -97,6 +110,19 @@ fun ProductListingFromLiveData(
     }
 
 
+}
+
+@Composable
+fun LoadingItem() {
+    CircularProgressIndicator(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .wrapContentWidth(
+                Alignment.CenterHorizontally
+            )
+    )
 }
 
 @Composable

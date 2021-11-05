@@ -3,14 +3,12 @@ package com.nrk.sephora.assignmentshepora.view.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,18 +24,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.text.parseAsHtml
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import com.nrk.sephora.assignmentshepora.R
-import com.nrk.sephora.assignmentshepora.models.Attributes
+import com.nrk.sephora.assignmentshepora.models.DummyDataHelper
 import com.nrk.sephora.assignmentshepora.models.ProductModel
 import com.nrk.sephora.assignmentshepora.view.ProductListingViewModel
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewProductDetailPage() {
-    val dummyProduct = ProductModel(Attributes("item1", "this is item1"), "id", "type")
+    val dummyProduct = DummyDataHelper.createDummyProduct("item1", "this is item1")
     ProductView(dummyProduct)
 }
 
@@ -45,17 +43,20 @@ fun PreviewProductDetailPage() {
 @Composable
 fun ProductDetailPage(
     productId: String,
+    navController:NavHostController,
     viewModel: ProductListingViewModel = hiltViewModel()
 ) {
     val product: ProductModel =
         viewModel.getLastSelectedItem(productId)
             ?: throw Throwable("No product selected. $productId")
 
-    ProductViewRoot(product)
+    ProductViewRoot(product){
+        navController.navigateUp()
+    }
 }
 
 @Composable
-fun ProductViewRoot(product: ProductModel) {
+fun ProductViewRoot(product: ProductModel, onAppBarBack:()->Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -71,7 +72,7 @@ fun ProductViewRoot(product: ProductModel) {
 
                 },
                 navigationIcon = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = onAppBarBack) {
                         Icon(Icons.Filled.ArrowBack, "")
                     }
                 },
@@ -252,7 +253,7 @@ fun ProductView(product: ProductModel) {
             )
         }
 
-        composeParagrapthWithTitle(
+        ComposeParagraphWithTitle(
             title = "DESCRIPTION",
             body = product.attributes.description,
             modifier = Modifier
@@ -265,7 +266,7 @@ fun ProductView(product: ProductModel) {
                 .wrapContentHeight()
                 .absolutePadding(bottom = 8.dp, left = 6.dp, right = 6.dp)
         )
-        composeParagrapthWithTitle(
+        ComposeParagraphWithTitle(
             title = "How to use:",
             body = product.attributes.description,
             modifier = Modifier
@@ -278,7 +279,7 @@ fun ProductView(product: ProductModel) {
                 .wrapContentHeight()
                 .absolutePadding(bottom = 8.dp, left = 6.dp, right = 6.dp)
         )
-        composeParagrapthWithTitle(
+        ComposeParagraphWithTitle(
             title = "What It Does:",
             body = product.attributes.how_to_text,
             modifier = Modifier
@@ -297,11 +298,11 @@ fun ProductView(product: ProductModel) {
 
 
 @Composable
-fun composeParagrapthWithTitle(title:String,body:String,modifier:Modifier){
+fun ComposeParagraphWithTitle(title:String, body:String, modifier:Modifier){
     Column(modifier = modifier,
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start) {
-        if(body.isNullOrEmpty().not()){
+        if(body.isEmpty().not()){
             Text(
                 text = title,
                 color = Color.Black,
